@@ -193,3 +193,30 @@ func TestSendRestartEvent(t *testing.T) {
     t.Logf("%s\n", data)
     recorded.CodeIs(200)
 }
+
+func TestGithubHook(t *testing.T) {
+    assert := assert.New(t)
+    config := map[string]interface{}{
+        "Volumes":    []string{},
+        "Ports":      []string{"9000:8000"},
+        "Env":        []string{"TEST=yes"},
+        "Name":       testServiceName,
+        "Repo":       "https://github.com/1tush/docker_test.git",
+        "LastCommit": "88782c0d3249d190520335ced2bc41355524708c",
+    }
+    putServiceConfig(config, t)
+    newComitId := "0d1a26e67d8f5eaf1f6ba5c57fc3c7d91ac0fd1c"
+    githubPayload := map[string]interface{}{
+        "repository": map[string]interface{}{
+            "clone_url": "https://github.com/1tush/docker_test.git",
+        },
+        "head_commit": map[string]interface{}{
+            "id": newComitId,
+        },
+    }
+    recorded := test.RunRequest(t, http.StripPrefix("/api", getRestApi().MakeHandler()),
+        test.MakeSimpleRequest("POST", fmt.Sprintf("http://localhost/api/hook/%s/push", testServiceName), githubPayload))
+    recorded.CodeIs(200)
+    storedConfig := getConfig(testServiceName, t)
+    assert.Equal(newComitId, storedConfig["LastCommit"].(string))
+}

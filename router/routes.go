@@ -6,6 +6,7 @@ import (
     "net/http"
 
     "github.com/da4nik/web-ui/api"
+    "github.com/da4nik/web-ui/hook"
 )
 
 var (
@@ -30,6 +31,8 @@ func getRestApi() *rest.Api {
 
         rest.Post("/services/:service/build", api.PostBuildService),     // GET param nodes
         rest.Post("/services/:service/restart", api.PostRestartService), //GET param node
+
+        rest.Post("/hook/:service/push", hook.PostPushHook),
     )
     if err != nil {
         log.Fatal(err)
