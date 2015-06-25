@@ -7,5 +7,6 @@ import (
 )
 
 func main() {
-    panic( http.ListenAndServe(":8000", router.Router()) )
+    router.Setup()
+    panic(http.ListenAndServe(":8000", nil))
 }

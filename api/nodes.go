@@ -1,9 +1,15 @@
 package api
 
 import (
-    "net/http"
+    "github.com/ant0ine/go-json-rest/rest"
 )
 
-func Nodes(w http.ResponseWriter, req *http.Request) {
-    w.Write([]byte("Supernodes list"))
+func GetAllNodes(w rest.ResponseWriter, r *rest.Request) {
+    lock.RLock()
+    defer lock.RUnlock()
+    nodes, err := Nodes()
+    if isError(err, w) {
+        return
+    }
+    w.WriteJson(&nodes)
 }
