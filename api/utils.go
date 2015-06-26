@@ -12,7 +12,7 @@ func isError(err error, w rest.ResponseWriter) bool {
         return true
     }
     if _, ok := err.(porterConsul.NotUpdatedError); ok {
-        rest.Error(w, "Consul data changed", http.StatusNotFound)
+        rest.Error(w, "Consul data changed", http.StatusConflict)
         return true
     }
     if err != nil {
