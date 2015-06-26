@@ -1,21 +1,59 @@
 package router
 
 import (
+    "github.com/ant0ine/go-json-rest/rest"
+    "log"
     "net/http"
-    "github.com/gorilla/mux"
 
     "github.com/da4nik/web-ui/api"
+    "github.com/da4nik/web-ui/hook"
 )
 
-func Router() *mux.Router {
-    r := mux.NewRouter()
+var (
+    HttpLogin    = "admin"
+    HttpPassword = "admin"
+)
 
-    api_root := r.PathPrefix("/api").Subrouter()
+func getRestApi() *rest.Api {
+    restapi := rest.NewApi()
+    restapi.Use(rest.DefaultDevStack...)
 
-    nodes := api_root.PathPrefix("/nodes").Subrouter()
-    nodes.HandleFunc("/", api.Nodes)
+    router, err := rest.MakeRouter(
+        rest.Get("/nodes", api.GetAllNodes),
+        rest.Get("/nodes/:node/services", api.GetNodeServices),
 
-    r.PathPrefix("/").Handler(http.FileServer(http.Dir("./dist/")))
+        rest.Get("/services", api.GetAllServices),
 
-    return r
+        rest.Put("/services/new", api.PutServiceConfig),
+        rest.Get("/services/:service/config", api.GetServiceConfig),
+        rest.Post("/services/:service/config", api.PostServiceConfig),
+        rest.Delete("/services/:service/config", api.DeleteServiceConfig),
+
+        rest.Post("/services/:service/build", api.PostBuildService),     // GET param nodes
+        rest.Post("/services/:service/restart", api.PostRestartService), //GET param node
+
+        rest.Post("/hook/:service/push", hook.PostPushHook),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+    restapi.SetApp(router)
+    return restapi
+}
+
+func Setup() {
+    restapi := getRestApi()
+    restapi.Use(&rest.AuthBasicMiddleware{
+        Realm: "test zone",
+        Authenticator: func(userId string, password string) bool {
+            if userId == HttpLogin && password == HttpPassword {
+                return true
+            }
+            return false
+        },
+    })
+
+    http.Handle("/api/", http.StripPrefix("/api", restapi.MakeHandler()))
+
+    http.Handle("/", http.FileServer(http.Dir("./dist/")))
 }
