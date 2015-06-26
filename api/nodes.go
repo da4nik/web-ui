@@ -5,8 +5,6 @@ import (
 )
 
 func GetAllNodes(w rest.ResponseWriter, r *rest.Request) {
-    lock.RLock()
-    defer lock.RUnlock()
     nodes, err := Nodes()
     if isError(err, w) {
         return

@@ -8,8 +8,6 @@ import (
 
 func GetServiceConfig(w rest.ResponseWriter, r *rest.Request) {
     serviceName := r.PathParam("service")
-    lock.RLock()
-    defer lock.RUnlock()
     config, err := porterConsul.GetServiceConfig(serviceName)
     if isError(err, w) {
         return
@@ -31,8 +29,6 @@ func PutServiceConfig(w rest.ResponseWriter, r *rest.Request) {
         rest.Error(w, "service name required", 400)
         return
     }
-    lock.Lock()
-    defer lock.Unlock()
     err = config.Update()
     if isError(err, w) {
         return
@@ -55,8 +51,6 @@ func PostServiceConfig(w rest.ResponseWriter, r *rest.Request) {
         return
     }
     config.Name = serviceName
-    lock.Lock()
-    defer lock.Unlock()
     err = config.Update()
     if err != nil {
         rest.Error(w, err.Error(), http.StatusInternalServerError)
@@ -71,8 +65,6 @@ func DeleteServiceConfig(w rest.ResponseWriter, r *rest.Request) {
     if isError(err, w) {
         return
     }
-    lock.Lock()
-    defer lock.Unlock()
     err = config.Delete()
     if isError(err, w) {
         return
